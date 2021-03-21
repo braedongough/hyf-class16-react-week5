@@ -1,49 +1,72 @@
+import {useEffect, useState} from 'react'
+import {Switch, Route, Link, useParams} from 'react-router-dom'
+
 import './App.css'
 
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useParams,
-} from 'react-router-dom'
+const API =
+  'https://gist.githubusercontent.com/braedongough/63d00d3035cbabc468e07c5df713d57a/raw/21e0699bd9f48895d90783b22dc1321c47ef34a6/blob-posts.json'
 
-function Post() {
+function Post({posts}) {
   const params = useParams()
-  return <div>WE ARE on post {params.blogId}</div>
+  const post = posts.find((post) => post.id === Number(params.id))
+
+  return (
+    <div>
+      {!post ? (
+        <div>Not Found</div>
+      ) : (
+        <div>
+          <div>{post.title}</div>
+          <p>{post.content}</p>
+        </div>
+      )}
+
+      <Link to='/'>Go home</Link>
+    </div>
+  )
+}
+
+function Home({posts}) {
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>
+          <Link to={`/post/${post.id}`}>{post.title}</Link>
+          <div>
+            Published by 🤖 {post.author} on {post.createdAt}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 function App() {
-  return (
-    <Router>
-      <div className='App'>
-        <h1>ROUTING</h1>
-        <ul>
-          <li>
-            <Link to='/'>HOME</Link>
-          </li>
-          <li>
-            <Link to='/about'>ABOUT</Link>
-          </li>
-          <li>
-            <Link to='/hidden'>HIDDEN</Link>
-          </li>
-        </ul>
+  const [posts, setPosts] = useState([])
 
-        <Switch>
-          <Route path='/about'>
-            <div>now we are on the about page</div>
-          </Route>
-          <Route path='/about/fun'>
-            <div>now we are on the about page</div>
-          </Route>
-          <Route exact path='/post/:blogId'>
-            <Post />
-          </Route>
-          <Route path='/hidden'>THIS IS MY HIDDEN ROUTE</Route>
-        </Switch>
-      </div>
-    </Router>
+  useEffect(() => {
+    fetch(API)
+      .then((res) => res.json())
+      .then((data) => {
+        setPosts(data)
+      })
+  }, [])
+
+  return (
+    <div className='app'>
+      <h1>HYF MOST Awesome Blog</h1>
+      <hr />
+      <Switch>
+        <Route exact path='/'>
+          <Home posts={posts} />
+        </Route>
+
+        <Route path='/post/:id' component={<Post posts={posts} />} />
+        <Route path='*'>
+          <div>404 not found</div>
+        </Route>
+      </Switch>
+    </div>
   )
 }
 
